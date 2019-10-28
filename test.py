@@ -1,4 +1,4 @@
-from middleware_manager.manager import MiddlewareManager
+from middleware_manager.base import MiddlewareManagerBase
 from middleware_manager import MiddlewareMixin
 import logging
 
@@ -27,11 +27,30 @@ class ThirdMiddleware(MiddlewareMixin):
         logger.info("Processing exception ThirdMiddleware {}".format(request))
 
 
+class FourthMiddleware(MiddlewareMixin):
+
+    def process_exception(self, request=None):
+        logger.info("Processing exception FourthMiddleware {}".format(request))
+
+
+class MiddlewareManager(MiddlewareManagerBase):
+    settings_key = "MIDDLEWARES_LIST"
+
+    def _add_method(self, mw_cls):
+        if hasattr(mw_cls, "process_request"):
+            self.methods.append(mw_cls().process_request)
+        if hasattr(mw_cls, "process_response"):
+            self.methods.append(mw_cls().process_response)
+        if hasattr(mw_cls, "process_exception"):
+            self.methods.append(mw_cls().process_exception)
+
+
 settings = {
     "MIDDLEWARES_LIST": {
         "__main__.FirstMiddleware": 0,
         "__main__.SecondMiddleware": 1,
-        "__main__.ThirdMiddleware": 2
+        "__main__.ThirdMiddleware": 2,
+        "__main__.FourthMiddleware": 3
     }
 }
 

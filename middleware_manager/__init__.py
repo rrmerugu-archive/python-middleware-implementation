@@ -1,1 +1,1 @@
-from .core.base import MiddlewareMixin
+from middleware_manager.base import MiddlewareMixin
