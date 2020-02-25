@@ -1,14 +1,16 @@
-from middleware_manager.base import MiddlewareManagerBase
-from middleware_manager import MiddlewareMixin
+from myframework.core.middleware.downloader.manager import MiddlewareManager
+from myframework.core.middleware.downloader.mixins import DownloaderMiddlewareMixin
+
 import logging
-from middleware_manager.base import Request, Response
+from myframework.core.response import  Response
+from myframework.core.request import Request
 
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
-class StartRequestMiddleware(MiddlewareMixin):
+class StartRequestMiddleware(DownloaderMiddlewareMixin):
 
     def process_request(self, request=None):
         logger.info("Processing request {name} {request}".format(name=self.__class__.__name__, request=request))
@@ -16,7 +18,7 @@ class StartRequestMiddleware(MiddlewareMixin):
         return request
 
 
-class ComputeRequestMiddleware(MiddlewareMixin):
+class ComputeRequestMiddleware(DownloaderMiddlewareMixin):
 
     def process_request(self, request=None):
         """
@@ -30,7 +32,7 @@ class ComputeRequestMiddleware(MiddlewareMixin):
         return Response(payload['a'] * payload['b'])
 
 
-class DefaultExceptionMiddleware(MiddlewareMixin):
+class DefaultExceptionMiddleware(DownloaderMiddlewareMixin):
 
     def process_exception(self, request=None, exception=None):
         logger.info("Processing exception {name} request:{request} exception:{exception}".format(
@@ -40,7 +42,7 @@ class DefaultExceptionMiddleware(MiddlewareMixin):
         )
 
 
-class ResponseHandlerMiddleware(MiddlewareMixin):
+class ResponseHandlerMiddleware(DownloaderMiddlewareMixin):
 
     def process_response(self, request=None, response=None):
         logger.info("Processing response {name} request:{request} response:{response}".format(
@@ -50,20 +52,8 @@ class ResponseHandlerMiddleware(MiddlewareMixin):
         )
 
 
-class MiddlewareManager(MiddlewareManagerBase):
-    settings_key = "MIDDLEWARES_LIST"
-
-    def _add_method(self, mw_cls):
-        if hasattr(mw_cls, "process_request"):
-            self.methods['process_request'].append(mw_cls().process_request)
-        if hasattr(mw_cls, "process_response"):
-            self.methods['process_response'].append(mw_cls().process_response)
-        if hasattr(mw_cls, "process_exception"):
-            self.methods['process_exception'].append(mw_cls().process_exception)
-
-
 settings = {
-    "MIDDLEWARES_LIST": {
+    "DOWNLOADER_MIDDLEWARES": {
         "__main__.StartRequestMiddleware": 0,
         "__main__.ComputeRequestMiddleware": 1,
         "__main__.DefaultExceptionMiddleware": 2,

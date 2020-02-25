@@ -1,41 +1,7 @@
-from middleware_manager.utils import import_class, try_except
+from myframework.core.utils import import_class, try_except
 from operator import itemgetter
-
-
-class Request:
-    payload = None
-    response = False
-    is_response_processed = False
-
-    def __init__(self, payload=None):
-        self.payload = payload
-
-
-class Response:
-    created_at = None
-    result = None
-
-    def __init__(self, result=None):
-        self.result = result
-
-    def __str__(self):
-        return "<Response result={}>".format(self.result)
-
-
-class MiddlewareMixin:
-    """
-
-Example usage:
-
-    def process_request(self, request=None):
-        pass
-
-    def process_response(self, request=None, response=None):
-        pass
-
-    def process_exception(self, request=None, response=None):
-        pass
-    """
+from myframework.core.request import Request
+from myframework.core.response import Response
 
 
 class MiddlewareManagerBase:
@@ -48,6 +14,7 @@ class MiddlewareManagerBase:
 
     """
     mw_classes = []  # classes
+
     methods = {
         "process_request": [],
         "process_response": [],
@@ -65,7 +32,7 @@ class MiddlewareManagerBase:
     def validate_cls_settings(self):
         if self.settings_key is None:
             raise Exception("Please give a key using which middleware classes "
-                            "can be imported from settings. example `MIDDLEWARES_LIST`. ")
+                            "can be imported from settings. example `{}`. ".format(self.settings_key))
 
     def import_classes(self):
         mw_classes = []
