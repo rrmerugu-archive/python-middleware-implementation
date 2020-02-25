@@ -1,5 +1,25 @@
-from middleware_manager.utils import import_class
+from middleware_manager.utils import import_class, try_except
 from operator import itemgetter
+
+
+class Request:
+    payload = None
+    response = False
+    is_response_processed = False
+
+    def __init__(self, payload=None):
+        self.payload = payload
+
+
+class Response:
+    created_at = None
+    result = None
+
+    def __init__(self, result=None):
+        self.result = result
+
+    def __str__(self):
+        return "<Response result={}>".format(self.result)
 
 
 class MiddlewareMixin:
@@ -28,7 +48,11 @@ class MiddlewareManagerBase:
 
     """
     mw_classes = []  # classes
-    methods = []
+    methods = {
+        "process_request": [],
+        "process_response": [],
+        "process_exception": [],
+    }
     settings_key = None
 
     def __init__(self, settings=None):
@@ -36,7 +60,7 @@ class MiddlewareManagerBase:
         self.validate_cls_settings()
 
         self.mw_classes = self.import_classes()
-        # print(self.mw_classes)
+        print(self.mw_classes)
 
     def validate_cls_settings(self):
         if self.settings_key is None:
@@ -60,12 +84,26 @@ class MiddlewareManagerBase:
             ordered_list[key] = value
         return ordered_list
 
-    def run(self):
+    def run(self, request=None):
         for cls in self.mw_classes:
             self._add_method(cls)
 
-        for method in self.methods:
-            method()
+        response = None
+        exception = None
+        for method in self.methods['process_request']:
+            response, exception = try_except(method, request=request)
+            if response is not None and not isinstance(response, (Response, Request)):
+                raise ValueError('Middleware %s.process_request must return None, Response or Request, got %s' % \
+                                 (method.__self__.__class__.__name__, response.__class__.__name__))
+            print("response", response)
+            if exception:
+                break
+        if exception:
+            for _method in self.methods['process_exception']:
+                try_except(_method, request=request, exception=exception)
+        if response:
+            for method in self.methods['process_response']:
+                method(request=request, response=response)
 
     def _add_method(self, mw_cls):
         raise NotImplementedError("""

@@ -9,3 +9,10 @@ def import_class(cls_string):
         return cls
     else:
         raise Exception("{} not Found", cls)
+
+
+def try_except(func, *args, **kwargs):
+    try:
+        return func(*args, **kwargs), None
+    except Exception as e:
+        return None, e
